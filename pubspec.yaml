@@ -29,12 +29,12 @@ environment:
 # versions available, run `flutter pub outdated`.
 dependencies:
   flutter:
-    sdk: flutter  # تأكد أن كلمة sdk تحت حرف u في كلمة flutter
+    sdk: flutter
 
   cupertino_icons: ^1.0.8
-  flutter_reactive_ble: ^5.3.1
   permission_handler: ^11.3.1
-
+  flutter_beacon: ^0.5.1  # أضف هذا السطر هنا بنفس محاذاة ما فوقه
+  # flutter_reactive_ble: ^5.3.1 (يمكنك حذفه أو تركه، لكننا لا نحتاجه حالياً)
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
 

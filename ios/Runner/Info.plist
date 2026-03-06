@@ -70,5 +70,11 @@
 <string>App needs Bluetooth to find your room beacon.</string>
 <key>NSBluetoothPeripheralUsageDescription</key>
 <string>App needs Bluetooth to find your room beacon.</string>
+<key>NSLocationWhenInUseUsageDescription</key>
+
+<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+
+<key>NSLocationAlwaysUsageDescription</key>
+
 </dict>
 </plist>
