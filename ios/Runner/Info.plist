@@ -3,7 +3,6 @@
 <plist version="1.0">
 <dict>
 
-	<!-- Bundle Identity -->
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 
@@ -31,7 +30,6 @@
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 
-	<!-- Device and Orientation -->
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 
@@ -46,25 +44,26 @@
 	<key>UIStatusBarStyle</key>
 	<string>UIStatusBarStyleLightContent</string>
 
-	<!-- Performance -->
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 
-	<!-- Privacy Permissions -->
 	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>Smart Radar needs Bluetooth to detect your Smart Room beacon.</string>
+	<string>Smart Radar uses Bluetooth to detect your Smart Room beacon and activate silent mode automatically.</string>
 
 	<key>NSBluetoothPeripheralUsageDescription</key>
-	<string>Smart Radar needs Bluetooth to detect your Smart Room beacon.</string>
+	<string>Smart Radar uses Bluetooth to detect your Smart Room beacon and activate silent mode automatically.</string>
 
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Smart Radar needs your location to measure distance to the room.</string>
+	<string>Smart Radar needs your location to measure the distance to the room beacon.</string>
+
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Smart Radar needs your location in the background to trigger silent mode automatically.</string>
 
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Smart Radar needs your location to trigger room actions automatically.</string>
+	<string>Smart Radar needs your location to trigger silent mode when you enter the room automatically.</string>
 
 </dict>
 </plist>
