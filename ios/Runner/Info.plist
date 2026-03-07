@@ -2,57 +2,69 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+
+	<!-- Bundle Identity -->
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+
 	<key>CFBundleDisplayName</key>
-	<string>Smart Room</string>
+	<string>Smart Radar</string>
+
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
+
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+
 	<key>CFBundleName</key>
-	<string>flutter_application_1</string>
+	<string>$(PRODUCT_NAME)</string>
+
 	<key>CFBundlePackageType</key>
-	<string>APPL</string>
+	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
+
 	<key>CFBundleShortVersionString</key>
 	<string>$(FLUTTER_BUILD_NAME)</string>
-	<key>CFBundleSignature</key>
-	<string>????</string>
+
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+
+	<!-- Device and Orientation -->
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
-	<key>UIMainStoryboardFile</key>
-	<string>Main</string>
+
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>UISupportedInterfaceOrientations~ipad</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
+
+	<key>UIStatusBarStyle</key>
+	<string>UIStatusBarStyleLightContent</string>
+
+	<!-- Performance -->
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 
+	<!-- Privacy Permissions -->
 	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>نحتاج للبلوتوث للاتصال بغرفتك الذكية</string>
+	<string>Smart Radar needs Bluetooth to detect your Smart Room beacon.</string>
+
 	<key>NSBluetoothPeripheralUsageDescription</key>
-	<string>نحتاج للبلوتوث للاتصال بغرفتك الذكية</string>
+	<string>Smart Radar needs Bluetooth to detect your Smart Room beacon.</string>
+
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>نحتاج للموقع للتعرف على وجودك داخل الغرفة</string>
+	<string>Smart Radar needs your location to measure distance to the room.</string>
+
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>نحتاج للموقع دائماً لفتح الغرفة تلقائياً عند اقترابك</string>
+	<string>Smart Radar needs your location to trigger room actions automatically.</string>
+
 </dict>
 </plist>
