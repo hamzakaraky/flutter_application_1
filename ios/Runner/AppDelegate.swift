@@ -5,6 +5,7 @@ import UserNotifications
 @main
 @objc class AppDelegate: FlutterAppDelegate {
 
+var window: UIWindow?
     // MARK: - Constants
     private let beaconUUID  = UUID(uuidString: "FDA50693-A4E2-4FB1-AFCF-C6EB07647825")!
     private let beaconMajor: CLBeaconMajorValue = 1
