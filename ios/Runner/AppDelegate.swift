@@ -5,7 +5,7 @@ import UserNotifications
 @main
 @objc class AppDelegate: FlutterAppDelegate {
 
-var window: UIWindow?
+
     // MARK: - Constants
     private let beaconUUID  = UUID(uuidString: "FDA50693-A4E2-4FB1-AFCF-C6EB07647825")!
     private let beaconMajor: CLBeaconMajorValue = 1
@@ -238,8 +238,9 @@ var window: UIWindow?
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
         if response.actionIdentifier == "ACTIVATE_FOCUS" {
-            if let url = URL(string: "shortcuts://") {
-                UIApplication.shared.open(url)
+         let shortcutName = "SilentMode" // اسم الاختصار الذي سيصممه المستخدم
+        if let url = URL(string: "shortcuts://run-shortcut?name=\(shortcutName)") {
+             UIApplication.shared.open(url)
             }
         }
         completionHandler()
