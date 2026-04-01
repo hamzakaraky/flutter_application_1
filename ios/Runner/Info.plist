@@ -3,67 +3,75 @@
 <plist version="1.0">
 <dict>
 
-	<key>CFBundleDevelopmentRegion</key>
-	<string>$(DEVELOPMENT_LANGUAGE)</string>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>$(DEVELOPMENT_LANGUAGE)</string>
 
-	<key>CFBundleDisplayName</key>
-	<string>Smart Radar</string>
+    <key>CFBundleDisplayName</key>
+    <string>Smart Radar</string>
 
-	<key>CFBundleExecutable</key>
-	<string>$(EXECUTABLE_NAME)</string>
+    <key>CFBundleExecutable</key>
+    <string>$(EXECUTABLE_NAME)</string>
 
-	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+    <key>CFBundleIdentifier</key>
+    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 
-	<key>CFBundleInfoDictionaryVersion</key>
-	<string>6.0</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
 
-	<key>CFBundleName</key>
-	<string>$(PRODUCT_NAME)</string>
+    <key>CFBundleName</key>
+    <string>$(PRODUCT_NAME)</string>
 
-	<key>CFBundlePackageType</key>
-	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
+    <key>CFBundlePackageType</key>
+    <string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
 
-	<key>CFBundleShortVersionString</key>
-	<string>$(FLUTTER_BUILD_NAME)</string>
+    <key>CFBundleShortVersionString</key>
+    <string>$(FLUTTER_BUILD_NAME)</string>
 
-	<key>CFBundleVersion</key>
-	<string>$(FLUTTER_BUILD_NUMBER)</string>
+    <key>CFBundleVersion</key>
+    <string>$(FLUTTER_BUILD_NUMBER)</string>
 
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
+    <key>LSRequiresIPhoneOS</key>
+    <true/>
 
-	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
+    <key>UILaunchStoryboardName</key>
+    <string>LaunchScreen</string>
 
-	<key>UISupportedInterfaceOrientations</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-	</array>
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+    </array>
 
-	<key>UIStatusBarStyle</key>
-	<string>UIStatusBarStyleLightContent</string>
+    <key>UIStatusBarStyle</key>
+    <string>UIStatusBarStyleLightContent</string>
 
-	<key>CADisableMinimumFrameDurationOnPhone</key>
-	<true/>
+    <key>CADisableMinimumFrameDurationOnPhone</key>
+    <true/>
 
-	<key>UIApplicationSupportsIndirectInputEvents</key>
-	<true/>
+    <key>UIApplicationSupportsIndirectInputEvents</key>
+    <true/>
 
-	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>Smart Radar uses Bluetooth to detect your Smart Room beacon and activate silent mode automatically.</string>
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>location</string>
+        <string>bluetooth-central</string>
+        <string>fetch</string>
+        <string>remote-notification</string>
+    </array>
 
-	<key>NSBluetoothPeripheralUsageDescription</key>
-	<string>Smart Radar uses Bluetooth to detect your Smart Room beacon and activate silent mode automatically.</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Smart Radar needs location to detect the Smart Room beacon.</string>
 
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Smart Radar needs your location to measure the distance to the room beacon.</string>
+    <key>NSLocationAlwaysUsageDescription</key>
+    <string>Smart Radar needs background location to automatically activate silent mode even when the app is closed.</string>
 
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>Smart Radar needs your location in the background to trigger silent mode automatically.</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>Smart Radar needs always-on location to automatically activate silent mode when you enter the Smart Room — even when the app is closed.</string>
 
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Smart Radar needs your location to trigger silent mode when you enter the room automatically.</string>
+    <key>NSBluetoothAlwaysUsageDescription</key>
+    <string>Smart Radar uses Bluetooth to detect your Smart Room beacon and activate silent mode automatically.</string>
+
+    <key>NSBluetoothPeripheralUsageDescription</key>
+    <string>Smart Radar uses Bluetooth to detect your Smart Room beacon and activate silent mode automatically.</string>
 
 </dict>
 </plist>
