@@ -1,14 +1,3 @@
-// ═══════════════════════════════════════════════════════════════════════════════
-//  Smart Radar — main.dart  v3.0
-//  Architecture:
-//    ┌─────────────┐   MethodChannel    ┌──────────────────────────┐
-//    │  Flutter UI │ ◄────────────────► │  Swift AppDelegate       │
-//    │  (Ranging)  │                    │  (CLBeaconRegion Monitor) │
-//    └─────────────┘                    └──────────────────────────┘
-//  - Swift handles background monitoring (works even when app is killed)
-//  - Flutter handles UI and foreground RSSI/distance display
-// ═══════════════════════════════════════════════════════════════════════════════
-
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -16,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_beacon/flutter_beacon.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-// ─── Entry Point ──────────────────────────────────────────────────────────────
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
@@ -27,7 +15,6 @@ void main() {
   runApp(const RadarApp());
 }
 
-// ─── App Root ─────────────────────────────────────────────────────────────────
 class RadarApp extends StatelessWidget {
   const RadarApp({super.key});
 
@@ -44,18 +31,16 @@ class RadarApp extends StatelessWidget {
   }
 }
 
-// ─── Enums ────────────────────────────────────────────────────────────────────
 enum RadarState {
   initializing,
   permissionDenied,
-  permissionPartial,  // When In Use granted but not Always
+  permissionPartial,
   bluetoothOff,
   scanning,
   detected,
   error,
 }
 
-// ─── Screen ───────────────────────────────────────────────────────────────────
 class RadarScreen extends StatefulWidget {
   const RadarScreen({super.key});
 
@@ -65,23 +50,19 @@ class RadarScreen extends StatefulWidget {
 
 class _RadarScreenState extends State<RadarScreen> with TickerProviderStateMixin {
 
-  // ─── Native Bridge (THE KEY TO BACKGROUND) ────────────────────────────────
   static const _channel = MethodChannel('com.smartroom/focus');
 
-  // ─── Animation Controllers ────────────────────────────────────────────────
   late final AnimationController _pulseController;
   late final AnimationController _sweepController;
   late final AnimationController _fadeController;
   late final AnimationController _detectedGlowController;
 
-  // ─── BLE (foreground ranging only — for live UI data) ─────────────────────
   StreamSubscription<RangingResult>? _streamRanging;
   final _region = Region(
     identifier: 'SmartRoom',
     proximityUUID: 'FDA50693-A4E2-4FB1-AFCF-C6EB07647825',
   );
 
-  // ─── State ────────────────────────────────────────────────────────────────
   RadarState _state = RadarState.initializing;
   double _distance = 0.0;
   int _rssi = -100;
@@ -90,7 +71,6 @@ class _RadarScreenState extends State<RadarScreen> with TickerProviderStateMixin
   String _errorMessage = '';
   bool _backgroundMonitoringActive = false;
 
-  // ─── Helpers ──────────────────────────────────────────────────────────────
   bool get _isDetected => _state == RadarState.detected;
 
   Color get _primaryColor =>
@@ -111,7 +91,6 @@ class _RadarScreenState extends State<RadarScreen> with TickerProviderStateMixin
     }
   }
 
-  // ─── Lifecycle ────────────────────────────────────────────────────────────
   @override
   void initState() {
     super.initState();
@@ -136,10 +115,7 @@ class _RadarScreenState extends State<RadarScreen> with TickerProviderStateMixin
       duration: const Duration(milliseconds: 1200),
     )..repeat(reverse: true);
 
-    // Step 1: Listen for native events from Swift
     _channel.setMethodCallHandler(_handleNativeCall);
-
-    // Step 2: Request permissions and start everything
     _initPermissions();
   }
 
@@ -153,13 +129,10 @@ class _RadarScreenState extends State<RadarScreen> with TickerProviderStateMixin
     super.dispose();
   }
 
-  // ─── Native Channel Handler ───────────────────────────────────────────────
-  /// Receives events FROM Swift AppDelegate
   Future<dynamic> _handleNativeCall(MethodCall call) async {
     if (!mounted) return null;
 
     switch (call.method) {
-      // ✅ Swift confirmed: beacon detected in range
       case 'onRoomEntered':
         setState(() {
           _state = RadarState.detected;
@@ -170,7 +143,6 @@ class _RadarScreenState extends State<RadarScreen> with TickerProviderStateMixin
         HapticFeedback.heavyImpact();
         break;
 
-      // ✅ Swift confirmed: beacon no longer in range
       case 'onRoomExited':
         setState(() {
           _state = RadarState.scanning;
@@ -182,7 +154,6 @@ class _RadarScreenState extends State<RadarScreen> with TickerProviderStateMixin
         HapticFeedback.mediumImpact();
         break;
 
-      // Permission status update from Swift
       case 'onPermissionChanged':
         final status = call.arguments as String? ?? '';
         if (status == 'denied' || status == 'restricted') {
@@ -192,11 +163,9 @@ class _RadarScreenState extends State<RadarScreen> with TickerProviderStateMixin
         }
         break;
 
-      // Native error
       case 'onError':
         final error = call.arguments as String? ?? 'Unknown native error';
         if (_state != RadarState.detected) {
-          // Don't override a "detected" state with an error
           setState(() {
             _errorMessage = error;
             _state = RadarState.error;
@@ -207,39 +176,32 @@ class _RadarScreenState extends State<RadarScreen> with TickerProviderStateMixin
     return null;
   }
 
-  // ─── Permission Flow ──────────────────────────────────────────────────────
   Future<void> _initPermissions() async {
     if (!mounted) return;
 
-    // Request notification permission first
     await Permission.notification.request();
 
-    // Request Bluetooth
     await [
       Permission.bluetoothScan,
       Permission.bluetoothConnect,
     ].request();
 
-    // Request Location — start with "When In Use", then escalate to "Always"
     var locationStatus = await Permission.locationWhenInUse.request();
 
     if (!mounted) return;
 
     if (locationStatus.isGranted) {
-      // Try to get "Always" permission (required for background monitoring)
       await Future.delayed(const Duration(milliseconds: 500));
       final alwaysStatus = await Permission.locationAlways.request();
 
       if (!mounted) return;
 
       if (alwaysStatus.isGranted) {
-        // Perfect — background monitoring will work
         await _startNativeMonitoring();
         _startForegroundRanging();
       } else {
-        // "When In Use" only — foreground works, background limited
         setState(() => _state = RadarState.permissionPartial);
-        await _startNativeMonitoring();  // Still try — may work in some configs
+        await _startNativeMonitoring();
         _startForegroundRanging();
         _showAlwaysPermissionDialog();
       }
@@ -248,7 +210,6 @@ class _RadarScreenState extends State<RadarScreen> with TickerProviderStateMixin
     }
   }
 
-  /// Tell Swift to start CLBeaconRegion monitoring
   Future<void> _startNativeMonitoring() async {
     try {
       await _channel.invokeMethod('startMonitoring');
@@ -256,12 +217,10 @@ class _RadarScreenState extends State<RadarScreen> with TickerProviderStateMixin
         setState(() => _state = RadarState.scanning);
       }
     } catch (e) {
-      // MethodChannel not available (e.g., on simulator)
       if (mounted) setState(() => _state = RadarState.scanning);
     }
   }
 
-  /// flutter_beacon ranging — foreground only, for live distance/RSSI display
   void _startForegroundRanging() async {
     try {
       await flutterBeacon.initializeAndCheckScanning;
@@ -279,22 +238,17 @@ class _RadarScreenState extends State<RadarScreen> with TickerProviderStateMixin
               _txPower     = beacon.txPower ?? -59;
               _distance    = dist;
               _beaconCount = result.beacons.length;
-              // Only update to detected if native hasn't already done it
-              // and the beacon is very close
+
               if (_state == RadarState.scanning && dist > 0 && dist < 1.5) {
                 _state = RadarState.detected;
                 _setPulseSpeed(fast: true);
                 HapticFeedback.heavyImpact();
               } else if (_state == RadarState.detected && dist > 2.0) {
-                // Foreground ranging says we've moved away
-                // (native monitoring will confirm with debounce)
                 _state = RadarState.scanning;
                 _setPulseSpeed(fast: false);
               }
             });
           } else if (_state != RadarState.detected) {
-            // No beacons in range — update counts but don't change detected state
-            // (native monitoring handles the authoritative exit event)
             setState(() {
               _beaconCount = 0;
               if (_state == RadarState.scanning) _distance = 0.0;
@@ -302,21 +256,16 @@ class _RadarScreenState extends State<RadarScreen> with TickerProviderStateMixin
           }
         },
         onError: (dynamic e) {
-          // Ranging errors are non-fatal — native monitoring continues
-          debugPrint('flutter_beacon ranging error (non-fatal): $e');
+          debugPrint('ranging error (non-fatal): $e');
         },
       );
     } on PlatformException catch (e) {
       if (e.code == 'BLUETOOTH_STATE' && mounted) {
         setState(() => _state = RadarState.bluetoothOff);
       }
-      // Native monitoring still active, so don't show error state
-    } catch (_) {
-      // Silently ignore ranging errors — native monitoring handles background
-    }
+    } catch (_) {}
   }
 
-  // ─── Helpers ──────────────────────────────────────────────────────────────
   void _setPulseSpeed({required bool fast}) {
     _pulseController.duration = fast
         ? const Duration(milliseconds: 500)
@@ -370,7 +319,6 @@ class _RadarScreenState extends State<RadarScreen> with TickerProviderStateMixin
     });
   }
 
-  // ─── Build ────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -396,7 +344,6 @@ class _RadarScreenState extends State<RadarScreen> with TickerProviderStateMixin
     );
   }
 
-  // ─── Warning Banner (partial permission) ──────────────────────────────────
   Widget _buildWarningBanner() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
@@ -425,7 +372,6 @@ class _RadarScreenState extends State<RadarScreen> with TickerProviderStateMixin
     );
   }
 
-  // ─── Header ───────────────────────────────────────────────────────────────
   Widget _buildHeader() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
@@ -478,7 +424,7 @@ class _RadarScreenState extends State<RadarScreen> with TickerProviderStateMixin
         children: [
           AnimatedBuilder(
             animation: _pulseController,
-            builder: (_, _) => Container(
+            builder: (_, __) => Container(
               width: 7,
               height: 7,
               decoration: BoxDecoration(
@@ -506,16 +452,14 @@ class _RadarScreenState extends State<RadarScreen> with TickerProviderStateMixin
     );
   }
 
-  // ─── Radar ────────────────────────────────────────────────────────────────
   Widget _buildRadar() {
     return Center(
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Outer glow — pulses stronger when detected
           AnimatedBuilder(
             animation: _detectedGlowController,
-            builder: (_, _) => AnimatedContainer(
+            builder: (_, __) => AnimatedContainer(
               duration: const Duration(milliseconds: 600),
               width: 330,
               height: 330,
@@ -532,14 +476,10 @@ class _RadarScreenState extends State<RadarScreen> with TickerProviderStateMixin
               ),
             ),
           ),
-
-          // Pulse rings
           ...List.generate(3, _buildPulseRing),
-
-          // Sweep + grid
           AnimatedBuilder(
             animation: _sweepController,
-            builder: (_, _) => CustomPaint(
+            builder: (_, __) => CustomPaint(
               size: const Size(290, 290),
               painter: _SweepPainter(_sweepController.value, _primaryColor),
             ),
@@ -548,8 +488,6 @@ class _RadarScreenState extends State<RadarScreen> with TickerProviderStateMixin
             size: const Size(290, 290),
             painter: _GridPainter(_primaryColor),
           ),
-
-          // Center orb
           _buildCenterOrb(),
         ],
       ),
@@ -560,7 +498,7 @@ class _RadarScreenState extends State<RadarScreen> with TickerProviderStateMixin
     final offset = i / 3.0;
     return AnimatedBuilder(
       animation: _pulseController,
-      builder: (_, _) {
+      builder: (_, __) {
         final t = (_pulseController.value + offset) % 1.0;
         return Container(
           width: 290 * t,
@@ -626,7 +564,6 @@ class _RadarScreenState extends State<RadarScreen> with TickerProviderStateMixin
     );
   }
 
-  // ─── Status Banner ────────────────────────────────────────────────────────
   Widget _buildStatusBanner() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -664,7 +601,6 @@ class _RadarScreenState extends State<RadarScreen> with TickerProviderStateMixin
     );
   }
 
-  // ─── Metrics ──────────────────────────────────────────────────────────────
   Widget _buildMetrics() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -741,7 +677,6 @@ class _RadarScreenState extends State<RadarScreen> with TickerProviderStateMixin
     );
   }
 
-  // ─── Setup Guide Button ───────────────────────────────────────────────────
   Widget _buildSetupGuideButton() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -780,7 +715,6 @@ class _RadarScreenState extends State<RadarScreen> with TickerProviderStateMixin
     );
   }
 
-  // ─── Setup Guide Sheet ────────────────────────────────────────────────────
   void _showSetupGuide() {
     showModalBottomSheet(
       context: context,
@@ -792,17 +726,13 @@ class _RadarScreenState extends State<RadarScreen> with TickerProviderStateMixin
           Navigator.pop(ctx);
           try {
             await _channel.invokeMethod('openShortcuts');
-          } catch (_) {
-            final uri = Uri.parse('shortcuts://');
-            // Fallback
-          }
+          } catch (_) {}
         },
       ),
     );
   }
 }
 
-// ─── Setup Guide Bottom Sheet ─────────────────────────────────────────────────
 class _SetupGuideSheet extends StatelessWidget {
   final Color primaryColor;
   final VoidCallback onOpenShortcuts;
@@ -818,16 +748,13 @@ class _SetupGuideSheet extends StatelessWidget {
       decoration: const BoxDecoration(
         color: Color(0xFF0A1628),
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border(
-          top: BorderSide(color: Color(0xFF1A3050), width: 1),
-        ),
+        border: Border(top: BorderSide(color: Color(0xFF1A3050), width: 1)),
       ),
       padding: EdgeInsets.fromLTRB(24, 16, 24, MediaQuery.of(context).padding.bottom + 24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Handle bar
           Center(
             child: Container(
               width: 40,
@@ -839,7 +766,6 @@ class _SetupGuideSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-
           Text(
             '🤖 Full Automation Setup',
             style: TextStyle(
@@ -855,36 +781,18 @@ class _SetupGuideSheet extends StatelessWidget {
             style: TextStyle(color: Colors.white54, fontSize: 13, height: 1.4),
           ),
           const SizedBox(height: 20),
-
-          _buildStep(
-            number: '1',
-            title: 'Allow "Always" Location',
+          _buildStep(number: '1', title: 'Allow "Always" Location',
             description: 'Settings → Smart Radar → Location → Always',
-            icon: Icons.location_on_rounded,
-            color: primaryColor,
-          ),
-          _buildStep(
-            number: '2',
-            title: 'Open Shortcuts App',
+            icon: Icons.location_on_rounded, color: primaryColor),
+          _buildStep(number: '2', title: 'Open Shortcuts App',
             description: 'Tap the button below to open the Shortcuts app',
-            icon: Icons.auto_awesome_rounded,
-            color: primaryColor,
-          ),
-          _buildStep(
-            number: '3',
-            title: 'Create Personal Automation',
+            icon: Icons.auto_awesome_rounded, color: primaryColor),
+          _buildStep(number: '3', title: 'Create Personal Automation',
             description: 'Automation → + → App → SmartRadar → "Is Opened"',
-            icon: Icons.play_circle_outline_rounded,
-            color: primaryColor,
-          ),
-          _buildStep(
-            number: '4',
-            title: 'Add Focus Action',
-            description: 'Add Action → "Set Focus" → Select "Do Not Disturb" → On\nThen: disable "Ask Before Running"',
-            icon: Icons.do_not_disturb_on_rounded,
-            color: primaryColor,
-          ),
-
+            icon: Icons.play_circle_outline_rounded, color: primaryColor),
+          _buildStep(number: '4', title: 'Add Focus Action',
+            description: 'Add Action → "Set Focus" → Do Not Disturb → On\nDisable "Ask Before Running"',
+            icon: Icons.do_not_disturb_on_rounded, color: primaryColor),
           const SizedBox(height: 6),
           Container(
             padding: const EdgeInsets.all(12),
@@ -899,7 +807,7 @@ class _SetupGuideSheet extends StatelessWidget {
                 SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'After setup: the app monitors in background. iOS triggers silent mode automatically when beacon is detected.',
+                    'After setup: iOS triggers silent mode automatically when beacon is detected.',
                     style: TextStyle(color: Colors.amber, fontSize: 11, height: 1.4),
                   ),
                 ),
@@ -907,16 +815,13 @@ class _SetupGuideSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: onOpenShortcuts,
               icon: const Icon(Icons.open_in_new_rounded, size: 18),
-              label: const Text(
-                'Open Shortcuts App',
-                style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
-              ),
+              label: const Text('Open Shortcuts App',
+                style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,
                 foregroundColor: const Color(0xFF020A18),
@@ -951,10 +856,8 @@ class _SetupGuideSheet extends StatelessWidget {
               border: Border.all(color: color.withOpacity(0.4)),
             ),
             child: Center(
-              child: Text(
-                number,
-                style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold),
-              ),
+              child: Text(number,
+                style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold)),
             ),
           ),
           const SizedBox(width: 14),
@@ -966,21 +869,14 @@ class _SetupGuideSheet extends StatelessWidget {
                   children: [
                     Icon(icon, color: color, size: 14),
                     const SizedBox(width: 6),
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
-                    ),
+                    Text(title,
+                      style: const TextStyle(color: Colors.white,
+                          fontWeight: FontWeight.bold, fontSize: 13)),
                   ],
                 ),
                 const SizedBox(height: 3),
-                Text(
-                  description,
-                  style: const TextStyle(color: Colors.white54, fontSize: 11.5, height: 1.4),
-                ),
+                Text(description,
+                  style: const TextStyle(color: Colors.white54, fontSize: 11.5, height: 1.4)),
               ],
             ),
           ),
@@ -989,10 +885,6 @@ class _SetupGuideSheet extends StatelessWidget {
     );
   }
 }
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// MARK: - Custom Painters
-// ═══════════════════════════════════════════════════════════════════════════════
 
 class _SweepPainter extends CustomPainter {
   final double progress;
@@ -1006,7 +898,6 @@ class _SweepPainter extends CustomPainter {
     final radius = size.width / 2;
     final angle  = progress * 2 * pi - pi / 2;
 
-    // Gradient arc
     final rect = Rect.fromCircle(center: center, radius: radius);
     final sweepPaint = Paint()
       ..shader = SweepGradient(
@@ -1016,7 +907,6 @@ class _SweepPainter extends CustomPainter {
       ).createShader(rect);
     canvas.drawCircle(center, radius, sweepPaint);
 
-    // Sweep line
     final linePaint = Paint()
       ..color      = color.withOpacity(0.9)
       ..strokeWidth = 2
@@ -1027,7 +917,6 @@ class _SweepPainter extends CustomPainter {
       linePaint,
     );
 
-    // Tip dot
     canvas.drawCircle(
       Offset(center.dx + cos(angle) * radius, center.dy + sin(angle) * radius),
       3,
@@ -1036,7 +925,8 @@ class _SweepPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_SweepPainter old) => old.progress != progress || old.color != color;
+  bool shouldRepaint(_SweepPainter old) =>
+      old.progress != progress || old.color != color;
 }
 
 class _GridPainter extends CustomPainter {
@@ -1054,26 +944,23 @@ class _GridPainter extends CustomPainter {
       ..strokeWidth = 1
       ..style      = PaintingStyle.stroke;
 
-    // 3 concentric rings
     for (int i = 1; i <= 3; i++) {
       canvas.drawCircle(center, radius * i / 3, paint);
     }
 
-    // Cardinal axes
     canvas.drawLine(Offset(0, center.dy), Offset(size.width, center.dy), paint);
     canvas.drawLine(Offset(center.dx, 0), Offset(center.dx, size.height), paint);
 
-    // Diagonals
     final d = radius * cos(pi / 4);
-    canvas.drawLine(Offset(center.dx - d, center.dy - d), Offset(center.dx + d, center.dy + d), paint);
-    canvas.drawLine(Offset(center.dx + d, center.dy - d), Offset(center.dx - d, center.dy + d), paint);
+    canvas.drawLine(Offset(center.dx - d, center.dy - d),
+        Offset(center.dx + d, center.dy + d), paint);
+    canvas.drawLine(Offset(center.dx + d, center.dy - d),
+        Offset(center.dx - d, center.dy + d), paint);
 
-    // Range labels
     final textStyle = TextStyle(color: color.withOpacity(0.35), fontSize: 9);
     for (int i = 1; i <= 3; i++) {
-      final label = '${i * 5}m';
       final tp = TextPainter(
-        text: TextSpan(text: label, style: textStyle),
+        text: TextSpan(text: '${i * 5}m', style: textStyle),
         textDirection: TextDirection.ltr,
       )..layout();
       tp.paint(canvas, Offset(center.dx + radius * i / 3 + 3, center.dy + 4));
