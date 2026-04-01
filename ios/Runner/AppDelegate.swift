@@ -2,7 +2,7 @@ import UIKit
 import Flutter
 import CoreLocation
 import UserNotifications
-
+@main
 @objc class AppDelegate: FlutterAppDelegate {
 
     // MARK: - Constants
