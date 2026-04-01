@@ -324,19 +324,5 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
         completionHandler()
     }
 }
-```
 
----
-
-## ملخص التغييرات
-```
-قبل ❌                          بعد ✅
-──────────────────────────────────────────
-1. setupFlutterChannel()        1. GeneratedPluginRegistrant
-2. setupLocationManager()       2. super.application(...)
-3. setupNotificationCenter()    3. DispatchQueue.main.async {
-4. startBeaconMonitoring()           setupFlutterChannel()
-5. GeneratedPluginRegistrant         setupLocationManager()
-6. super.application(...)            setupNotificationCenter()
-                                     startBeaconMonitoring()
-                                }
+                                
